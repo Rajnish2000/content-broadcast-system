@@ -1,0 +1,62 @@
+1. Authentication & RBAC Flow
+Users authenticate using JWT tokens. After login, a token is issued containing user ID and role. Middleware verifies token and enforces role-based access:
+- Teacher: Upload content, view own content
+- Principal: Approve/reject content
+
+2. Subject-based System Design
+Each content belongs to a subject (Maths, Science, etc.). Content is grouped by subject, and each subject has independent rotation logic for broadcasting.
+
+3. Upload Handling Approach
+File uploads are handled using Multer. Files are stored locally in /uploads directory. Validation ensures:
+- Only JPG, PNG, GIF allowed
+- Max size 10MB
+
+4. Approval Workflow Design
+Content lifecycle:
+uploaded → pending → approved/rejected
+
+Teacher uploads content → status = pending  
+Principal reviews:
+- Approve → content becomes eligible
+- Reject → rejection reason stored
+
+5. Scheduling & Rotation Logic
+Core logic:
+- Only approved content is considered
+- Content must be within start_time and end_time
+- Content grouped by subject
+- Each content has duration
+- System calculates:
+  current_time % total_duration
+- Based on cumulative duration → active content selected
+- Rotation loops continuously
+
+6. Database Design Decisions
+Normalized schema:
+- Users table for authentication
+- Content table stores uploaded content
+- Schedule table manages rotation
+Relationships:
+- User → Content (1:N)
+- Content → Schedule (1:N)
+
+7. Folder Structure
+Modular structure:
+controllers → business logic  
+routes → API endpoints  
+services → core logic (scheduling)  
+middlewares → auth, upload, error  
+models → DB schema  
+utils → helper functions  
+
+8. Middleware Usage
+- Auth middleware → JWT validation
+- Role middleware → RBAC
+- Upload middleware → file handling
+- Error middleware → centralized error handling
+
+9. Scalability Approach
+- Redis can be used to cache /content/live API
+- Queue system (BullMQ) can handle scheduling jobs
+- File storage can be moved to AWS S3
+- DB indexing on subject and status improves performance
